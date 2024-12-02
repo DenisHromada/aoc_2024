@@ -1,4 +1,6 @@
-﻿open System
+﻿module Day1
+
+open System
 open System.IO
 open Microsoft.FSharp.Core
 
@@ -26,8 +28,6 @@ let getDistances (a: int list, b: int list) : int =
 let listA, listB = linesToLists lines
 let resultFirst = getDistances (listA, listB)
 
-printfn $"Result first: %d{resultFirst}\n"
-
 // Part Two
 let frequencyMap =
     listB
@@ -42,4 +42,6 @@ let resultSecond =
         )
     |> List.sum
 
-printfn $"Result second: %d{resultSecond}\n"
+let run() =
+    printfn $"Result first: %d{resultFirst}"
+    printfn $"Result second: %d{resultSecond}"
