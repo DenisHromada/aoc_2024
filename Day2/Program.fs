@@ -57,7 +57,7 @@ let isSafeDampened (line: int seq) : bool =
         |> Seq.exists isSafe
 
 let resultSecond =
-    lines |> Seq.map splitLine |> Seq.map isSafeDampened |> Seq.filter id |> Seq.length
+    lines |> Seq.map splitLine |> Seq.filter isSafeDampened |> Seq.length
 
 let run () =
     printfn $"Result first: %d{resultFirst}\n"
