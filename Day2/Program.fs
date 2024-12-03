@@ -60,5 +60,5 @@ let resultSecond =
     lines |> Seq.map splitLine |> Seq.filter isSafeDampened |> Seq.length
 
 let run () =
-    printfn $"Result first: %d{resultFirst}\n"
-    printfn $"Result second: %d{resultSecond}\n"
+    printfn $"Result first: %d{resultFirst}"
+    printfn $"Result second: %d{resultSecond}"
