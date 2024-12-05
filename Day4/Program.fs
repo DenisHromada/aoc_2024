@@ -16,17 +16,16 @@ type Direction =
     | Left
     | UpLeft
 
-let edgeDirectionsFirst: Map<Direction,(int * int)> =
-    [
-        Up, (-1, 0)
-        UpRight, (-1, 1)
-        Right, (0, 1)
-        DownRight, (1, 1)
-        Down, (1, 0)
-        DownLeft, (1, -1)
-        Left, (0, -1)
-        UpLeft, (-1, -1)
-    ] |> Map.ofList
+let edgeDirectionsFirst: Map<Direction, (int * int)> =
+    [ Up, (-1, 0)
+      UpRight, (-1, 1)
+      Right, (0, 1)
+      DownRight, (1, 1)
+      Down, (1, 0)
+      DownLeft, (1, -1)
+      Left, (0, -1)
+      UpLeft, (-1, -1) ]
+    |> Map.ofList
 
 let moveForward (position: int * int) (dir: Direction) : int * int =
     let y, x = position
@@ -35,26 +34,24 @@ let moveForward (position: int * int) (dir: Direction) : int * int =
 
 let splitLines (input: string seq) : Map<int * int, char> =
     input
-    |> Seq.mapi (fun yCoord line ->
-        line
-        |> Seq.mapi (fun xCoord char -> ((yCoord, xCoord), char))
-    )
+    |> Seq.mapi (fun yCoord line -> line |> Seq.mapi (fun xCoord char -> ((yCoord, xCoord), char)))
     |> Seq.collect id // flatten
     |> Map.ofSeq
 
 let startPositions (input: Map<int * int, char>) (startLetter: char) : (int * int) seq =
-    input
-    |> Map.keys
-    |> Seq.filter (fun coords -> input[coords] = startLetter)
+    input |> Map.keys |> Seq.filter (fun coords -> input[coords] = startLetter)
 
 
-let rec getSeqInDirection (input: Map<int * int, char>) (startPos: int * int) (dir: Direction) : string =
+let rec getSeqInDirection (input: Map<int * int, char>) (startPos: int * int) (dir: Direction) (length: int) : string =
     match Map.tryFind startPos input with
     | Some charAtPos ->
         let nextCoord = moveForward startPos dir
-        string charAtPos + (getSeqInDirection input nextCoord dir)
-    | None ->
-        ""
+
+        if length <> 0 then
+            string charAtPos + (getSeqInDirection input nextCoord dir (length - 1))
+        else
+            ""
+    | None -> ""
 
 let targetFirst = "XMAS"
 
@@ -74,14 +71,13 @@ let targetFirst = "XMAS"
 
 let calculateFirst (input: string seq) : int =
     let mp = input |> splitLines
-    let sp = startPositions mp targetFirst[0]
-    let strings = sp
-                |> Seq.collect (fun sp ->
-                    edgeDirectionsFirst
-                        |> Map.keys
-                        |> Seq.collect (fun dir -> Seq.singleton (getSeqInDirection mp sp dir))
-                    )
-    strings
+
+    startPositions mp targetFirst[0]
+    |> Seq.collect (fun sp ->
+        edgeDirectionsFirst
+        |> Map.keys
+        |> Seq.map (fun dir -> getSeqInDirection mp sp dir targetFirst.Length))
+    // search strings
     |> Seq.map _.StartsWith(targetFirst)
     |> Seq.filter id
     |> Seq.length
@@ -92,34 +88,31 @@ let resultFirst = lines |> calculateFirst
 // Part Two
 
 let targetSecond = "MAS"
-let edgeDirectionsSecond: Map<Direction,(int * int)> =
-    [
-        UpRight, (-1, 1)
-        DownRight, (1, 1)
-        DownLeft, (1, -1)
-        UpLeft, (-1, -1)
-    ] |> Map.ofList
+
+let edgeDirectionsSecond: Map<Direction, (int * int)> =
+    [ UpRight, (-1, 1); DownRight, (1, 1); DownLeft, (1, -1); UpLeft, (-1, -1) ]
+    |> Map.ofList
 
 let moveBackwards (position: int * int) (dir: Direction) : int * int =
     let y, x = position
     let dy, dx = edgeDirectionsFirst[dir]
     (y - dy, x - dx)
+
+// find As and search for MAS around them
 let calculateSecond (input: string seq) : int =
     let mp = input |> splitLines
-    let sp = startPositions mp targetSecond[1]
-    let strings = sp
-                |> Seq.map (fun sp ->
-                    edgeDirectionsSecond
-                        |> Map.keys
-                        |> Seq.collect (fun dir ->
-                            let newSp = moveBackwards sp dir
-                            Seq.singleton (getSeqInDirection mp newSp dir))
-                    )
-    strings
-    |> Seq.map (fun diagonals -> diagonals |> Seq.map _.StartsWith(targetSecond) |> Seq.filter id |> Seq.length |> (fun x -> x = 2))
-    |> Seq.filter id
+
+    startPositions mp targetSecond[1]
+    // get strings
+    |> Seq.map (fun sp ->
+        edgeDirectionsSecond
+        |> Map.keys
+        |> Seq.map (fun dir -> getSeqInDirection mp (moveBackwards sp dir) dir targetSecond.Length))
+    // search strings
+    |> Seq.filter (fun diagonals -> diagonals |> Seq.filter _.StartsWith(targetSecond) |> Seq.length = 2)
     |> Seq.length
-let resultSecond =  lines |> calculateSecond
+
+let resultSecond = lines |> calculateSecond
 
 let run () =
     printfn $"Result first: %d{resultFirst}"
